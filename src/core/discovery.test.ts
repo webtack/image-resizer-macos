@@ -1,0 +1,45 @@
+import { promises as fs } from 'node:fs';
+import * as path from 'node:path';
+import { describe, expect, it } from 'vitest';
+import { discoverImages, isPreviousOutput } from './discovery';
+import { makeTempDir } from './test-fixtures';
+
+/** Creates empty files (relative paths) inside `root`, making folders as needed. */
+async function touch(root: string, names: string[]): Promise<void> {
+  for (const n of names) {
+    await fs.mkdir(path.dirname(path.join(root, n)), { recursive: true });
+    await fs.writeFile(path.join(root, n), 'x');
+  }
+}
+
+describe('discoverImages', () => {
+  it('lists only supported images from a mixed folder', async () => {
+    const dir = await makeTempDir();
+    await touch(dir, ['1.jpg', '2.JPEG', '3.jpg', '4.jpg', '5.jpg', 'a.png', 'b.PNG', 'n1.txt', 'n2.md', 'n3.pdf', '.hidden.jpg']);
+    const files = await discoverImages(dir);
+    expect(files.map((f) => path.basename(f))).toEqual(['1.jpg', '2.JPEG', '3.jpg', '4.jpg', '5.jpg', 'a.png', 'b.PNG']);
+  });
+
+  it('scans subfolders only when recursive is on', async () => {
+    const dir = await makeTempDir();
+    await touch(dir, ['top.jpg', 'sub/deep.png', 'sub/inner/x.webp', '.git/ignored.jpg']);
+    expect(await discoverImages(dir)).toHaveLength(1);
+    const all = await discoverImages(dir, { recursive: true });
+    expect(all.map((f) => path.relative(dir, f))).toEqual(['sub/deep.png', 'sub/inner/x.webp', 'top.jpg']);
+  });
+
+  it('skips previous outputs of the selected preset, including collision counters', async () => {
+    const dir = await makeTempDir();
+    await touch(dir, ['photo.jpg', 'photo_1080x1350.jpg', 'photo_1080x1350-1.jpg', 'other_1920x1080.jpg']);
+    const files = await discoverImages(dir, { preset: { width: 1080, height: 1350 } });
+    expect(files.map((f) => path.basename(f))).toEqual(['other_1920x1080.jpg', 'photo.jpg']);
+  });
+});
+
+describe('isPreviousOutput', () => {
+  it('matches only the selected preset size', () => {
+    expect(isPreviousOutput('a_1080x1350.jpg', { width: 1080, height: 1350 })).toBe(true);
+    expect(isPreviousOutput('a_1080x1350.jpg', { width: 1080, height: 1080 })).toBe(false);
+    expect(isPreviousOutput('a_1080x13500.jpg', { width: 1080, height: 1350 })).toBe(false);
+  });
+});

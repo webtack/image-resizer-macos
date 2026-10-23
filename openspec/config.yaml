@@ -2,12 +2,10 @@ schema: spec-driven
 
 # Project context (optional)
 # This is shown to AI when creating artifacts.
-# Add your tech stack, conventions, style guides, domain knowledge, etc.
-# Example:
-#   context: |
-#     Tech stack: TypeScript, React, Node.js
-#     We use conventional commits
-#     Domain: e-commerce platform
+context: |
+  Tech stack: Electron, TypeScript, sharp, Vitest; macOS 13+; unsigned .dmg/.zip via electron-builder (no App Store)
+  Code rules: all code is commented in English (TSDoc) with usage examples in doc comments
+  Docs rules: the docs/ folder is mandatory and is kept up to date in Ukrainian
 
 # Per-artifact rules (optional)
 # Add custom rules for specific artifacts.

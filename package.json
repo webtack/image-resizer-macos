@@ -1,0 +1,66 @@
+{
+  "name": "image-resizer",
+  "productName": "Image Resizer",
+  "version": "0.1.0",
+  "description": "Batch image resizer with smart fit and blurred background",
+  "main": "dist/main/main.js",
+  "private": true,
+  "license": "UNLICENSED",
+  "author": "Ruslan Bilyshko",
+  "scripts": {
+    "build": "tsc -p tsconfig.json && tsc -p tsconfig.renderer.json && node scripts/copy-static.mjs",
+    "start": "npm run build && electron .",
+    "test": "vitest run",
+    "dist": "npm run build && electron-builder"
+  },
+  "dependencies": {
+    "sharp": "^0.35.5"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "electron": "^41.7.1",
+    "electron-builder": "^26.15.3",
+    "typescript": "^7.0.2",
+    "vitest": "^4.1.12"
+  },
+  "build": {
+    "appId": "com.ruslan.imageresizer",
+    "productName": "Image Resizer",
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "files": [
+      "dist/**/*",
+      "package.json"
+    ],
+    "asarUnpack": [
+      "**/node_modules/sharp/**/*",
+      "**/node_modules/@img/**/*"
+    ],
+    "mac": {
+      "category": "public.app-category.graphics-design",
+      "icon": "build/icon.icns",
+      "identity": null,
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        }
+      ]
+    },
+    "dmg": {
+      "sign": false
+    }
+  }
+}
