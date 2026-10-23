@@ -10,6 +10,14 @@ export class WriteFolderError extends Error {
   }
 }
 
+/**
+ * Name of the subfolder that holds all results, so they never mix with the originals.
+ *
+ * @example
+ * path.join('/photos', OUTPUT_FOLDER_NAME); // '/photos/resized'
+ */
+export const OUTPUT_FOLDER_NAME = 'resized';
+
 /** Error codes that mean "not allowed to write here". */
 const PERMISSION_CODES = new Set(['EACCES', 'EPERM', 'EROFS']);
 
@@ -27,21 +35,32 @@ export function outputName(sourceFile: string, canvas: Size, ext: string, counte
 }
 
 /**
- * Writes `data` beside `sourceFile` under the output name, never overwriting an existing file.
+ * Writes `data` into `<baseDir>/resized` under the output name, never overwriting an existing file.
+ * `baseDir` defaults to the folder of `sourceFile`; the `resized` folder is created on demand.
  *
- * The bytes go to a temporary file in the same folder first and are then hard-linked to the final
- * name: `link` fails if the name is taken (so we bump the counter), and the final name only ever
- * appears fully written, so a crash or cancel cannot leave a partial output.
+ * The bytes go to a temporary file in the destination folder first and are then hard-linked to the
+ * final name: `link` fails if the name is taken (so we bump the counter), and the final name only
+ * ever appears fully written, so a crash or cancel cannot leave a partial output.
  * Permission errors are reported as {@link WriteFolderError}.
  *
  * @example
  * const out = await writeOutput('/photos/a.jpg', jpegBytes, { width: 1080, height: 1350 }, 'jpg');
- * // '/photos/a_1080x1350.jpg'
+ * // '/photos/resized/a_1080x1350.jpg'
+ * const flat = await writeOutput('/photos/trip/a.jpg', jpegBytes, { width: 1080, height: 1350 }, 'jpg', '/photos');
+ * // '/photos/resized/a_1080x1350.jpg' (or '-1' if the name is taken)
  */
-export async function writeOutput(sourceFile: string, data: Buffer, canvas: Size, ext: string): Promise<string> {
-  const dir = path.dirname(sourceFile);
+export async function writeOutput(
+  sourceFile: string,
+  data: Buffer,
+  canvas: Size,
+  ext: string,
+  baseDir: string = path.dirname(sourceFile),
+): Promise<string> {
+  const dir = path.join(baseDir, OUTPUT_FOLDER_NAME);
   const tmp = path.join(dir, `.${path.parse(sourceFile).name}.${process.pid}.${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}.tmp`);
   try {
+    // `recursive` makes this a no-op when the folder exists, so parallel workers cannot race.
+    await fs.mkdir(dir, { recursive: true });
     await fs.writeFile(tmp, data, { flag: 'wx' });
     for (let counter = 0; ; counter++) {
       const dest = path.join(dir, outputName(sourceFile, canvas, ext, counter));
@@ -53,7 +72,7 @@ export async function writeOutput(sourceFile: string, data: Buffer, canvas: Size
       }
     }
   } catch (err) {
-    if (PERMISSION_CODES.has((err as NodeJS.ErrnoException).code ?? '')) throw new WriteFolderError(dir);
+    if (PERMISSION_CODES.has((err as NodeJS.ErrnoException).code ?? '')) throw new WriteFolderError(baseDir);
     throw err;
   } finally {
     await fs.rm(tmp, { force: true }).catch(() => undefined);

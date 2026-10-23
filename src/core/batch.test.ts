@@ -25,7 +25,7 @@ describe('runBatch', () => {
     const failed = summary.results.find((r) => r.status === 'failed');
     expect(failed?.file).toContain('bad0.jpg');
     expect(failed?.error).toBeTruthy();
-    expect(await fs.readdir(dir)).toContain('ok00_108x135.jpg');
+    expect(await fs.readdir(path.join(dir, 'resized'))).toContain('ok00_108x135.jpg');
   });
 
   it('cancel stops new files, keeps finished outputs and marks the rest skipped', async () => {
@@ -43,7 +43,7 @@ describe('runBatch', () => {
     });
     expect(summary.succeeded).toBe(3);
     expect(summary.skipped).toBe(7);
-    const outputs = (await fs.readdir(dir)).filter((n) => n.includes('_108x135'));
+    const outputs = (await fs.readdir(path.join(dir, 'resized'))).filter((n) => n.includes('_108x135'));
     expect(outputs).toHaveLength(3);
   });
 
@@ -73,6 +73,30 @@ describe('runBatch', () => {
     const summary = await runBatch(await discoverImages(dir), { canvas, format: 'keep', concurrency: 1 });
     expect(summary.succeeded).toBe(1);
     expect(path.basename(summary.results[0].output!)).toBe('pic_108x135.jpg');
+  });
+
+  it('each mode: puts results into the resized folder of each source folder', async () => {
+    const root = await makeFolder(1);
+    const nested = path.join(root, 'trip');
+    await fs.mkdir(nested);
+    await writeGradient(path.join(nested, 'deep.jpg'), 200, 150);
+    const files = await discoverImages(root, { recursive: true });
+    await runBatch(files, { canvas, format: 'jpeg', outputMode: 'each', outputRoot: root });
+    expect(await fs.readdir(path.join(root, 'resized'))).toEqual(['ok00_108x135.jpg']);
+    expect(await fs.readdir(path.join(nested, 'resized'))).toEqual(['deep_108x135.jpg']);
+  });
+
+  it('single mode: puts all results into the selected folder and numbers same-name files', async () => {
+    const root = await makeTempDir();
+    for (const sub of ['a', 'b', 'a/inner']) {
+      await fs.mkdir(path.join(root, sub), { recursive: true });
+      await writeGradient(path.join(root, sub, 'IMG.jpg'), 200, 150);
+    }
+    const files = await discoverImages(root, { recursive: true });
+    const summary = await runBatch(files, { canvas, format: 'jpeg', outputMode: 'single', outputRoot: root, concurrency: 1 });
+    expect(summary.succeeded).toBe(3);
+    expect((await fs.readdir(path.join(root, 'resized'))).sort()).toEqual(['IMG_108x135-1.jpg', 'IMG_108x135-2.jpg', 'IMG_108x135.jpg']);
+    await expect(fs.stat(path.join(root, 'a', 'resized'))).rejects.toThrow();
   });
 
   it('handles an empty list', async () => {

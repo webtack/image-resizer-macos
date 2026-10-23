@@ -34,6 +34,14 @@ describe('discoverImages', () => {
     const files = await discoverImages(dir, { preset: { width: 1080, height: 1350 } });
     expect(files.map((f) => path.basename(f))).toEqual(['other_1920x1080.jpg', 'photo.jpg']);
   });
+
+  it('never enters a resized folder, in any letter case, with or without recursive', async () => {
+    const dir = await makeTempDir();
+    await touch(dir, ['top.jpg', 'resized/old.jpg', 'sub/Resized/old2.jpg', 'sub/keep.png']);
+    expect((await discoverImages(dir)).map((f) => path.relative(dir, f))).toEqual(['top.jpg']);
+    const all = await discoverImages(dir, { recursive: true });
+    expect(all.map((f) => path.relative(dir, f))).toEqual(['sub/keep.png', 'top.jpg']);
+  });
 });
 
 describe('isPreviousOutput', () => {

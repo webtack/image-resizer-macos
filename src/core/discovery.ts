@@ -1,6 +1,7 @@
 import { promises as fs } from 'node:fs';
 import * as path from 'node:path';
 import type { Size } from './fit';
+import { OUTPUT_FOLDER_NAME } from './output';
 
 /** File extensions (lowercase, with dot) the app accepts as source images. */
 export const SUPPORTED_EXTENSIONS: ReadonlySet<string> = new Set([
@@ -29,7 +30,8 @@ export function isPreviousOutput(fileName: string, preset: Size): boolean {
 
 /**
  * Lists supported images in `folder`, sorted by path. Hidden files and folders (leading dot) are
- * ignored, symbolic links are not followed, and previous outputs for the selected preset are
+ * ignored, folders named `resized` (our output folder, any letter case) are never entered,
+ * symbolic links are not followed, and previous outputs for the selected preset are
  * excluded so a second run never re-processes its own results.
  *
  * @example
@@ -44,6 +46,7 @@ export async function discoverImages(folder: string, options: DiscoveryOptions =
       if (entry.name.startsWith('.')) continue;
       const full = path.join(dir, entry.name);
       if (entry.isDirectory()) {
+        if (entry.name.toLowerCase() === OUTPUT_FOLDER_NAME) continue;
         if (options.recursive) await walk(full);
       } else if (entry.isFile() && SUPPORTED_EXTENSIONS.has(path.extname(entry.name).toLowerCase())) {
         if (options.preset && isPreviousOutput(entry.name, options.preset)) continue;

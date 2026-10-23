@@ -22,6 +22,8 @@ export interface RunOptions {
   recursive: boolean;
   format: OutputFormat;
   quality: number;
+  /** Where results from subfolders go; only matters when `recursive` is on. */
+  outputMode: 'each' | 'single';
 }
 
 /**

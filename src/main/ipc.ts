@@ -85,6 +85,8 @@ export function registerIpc(getWindow: () => BrowserWindow | null, store: Preset
           canvas: { width: preset.width, height: preset.height },
           format: options.format,
           quality: options.quality,
+          outputMode: options.outputMode === 'single' ? 'single' : 'each',
+          outputRoot: selectedFolder,
           signal: running.signal,
           onResult: (result, completed, total) => {
             // Send paths relative to the folder, matching the file list shown in the UI.

@@ -15,6 +15,12 @@
           <span id="folder-path" class="muted">or drop a folder onto this window</span>
         </div>
         <label class="check"><input type="checkbox" id="recursive" /> Include subfolders</label>
+        <label class="check">Save subfolder results
+          <select id="output-mode" disabled>
+            <option value="each" selected>Each folder has its own resized</option>
+            <option value="single">One resized in the selected folder</option>
+          </select>
+        </label>
         <p id="image-count" class="muted"></p>
         <p id="no-images" class="warn" hidden>No images found</p>
         <ul id="file-list" class="files"></ul>

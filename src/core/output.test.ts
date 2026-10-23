@@ -1,7 +1,7 @@
 import { promises as fs } from 'node:fs';
 import * as path from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { outputName, WriteFolderError, writeOutput } from './output';
+import { OUTPUT_FOLDER_NAME, outputName, WriteFolderError, writeOutput } from './output';
 import { makeTempDir } from './test-fixtures';
 
 const canvas = { width: 1080, height: 1350 };
@@ -14,24 +14,36 @@ describe('outputName', () => {
 });
 
 describe('writeOutput', () => {
-  it('writes beside the original and leaves the original untouched', async () => {
+  it('creates the resized folder on demand and leaves the original untouched', async () => {
     const dir = await makeTempDir();
     const src = path.join(dir, 'IMG_001.jpg');
     await fs.writeFile(src, 'original');
     const out = await writeOutput(src, Buffer.from('new'), canvas, 'jpg');
-    expect(out).toBe(path.join(dir, 'IMG_001_1080x1350.jpg'));
+    expect(out).toBe(path.join(dir, OUTPUT_FOLDER_NAME, 'IMG_001_1080x1350.jpg'));
     expect(await fs.readFile(src, 'utf8')).toBe('original');
     expect(await fs.readFile(out, 'utf8')).toBe('new');
   });
 
-  it('appends a counter instead of overwriting an existing file', async () => {
+  it('uses the given base folder independently of the source folder', async () => {
+    const root = await makeTempDir();
+    const sub = path.join(root, 'trip');
+    await fs.mkdir(sub);
+    const src = path.join(sub, 'a.jpg');
+    await fs.writeFile(src, 'o');
+    const out = await writeOutput(src, Buffer.from('n'), canvas, 'jpg', root);
+    expect(out).toBe(path.join(root, OUTPUT_FOLDER_NAME, 'a_1080x1350.jpg'));
+    await expect(fs.stat(path.join(sub, OUTPUT_FOLDER_NAME))).rejects.toThrow();
+  });
+
+  it('appends a counter inside resized instead of overwriting an existing file', async () => {
     const dir = await makeTempDir();
     const src = path.join(dir, 'IMG_001.jpg');
     await fs.writeFile(src, 'original');
-    await fs.writeFile(path.join(dir, 'IMG_001_1080x1350.jpg'), 'existing');
+    await fs.mkdir(path.join(dir, OUTPUT_FOLDER_NAME));
+    await fs.writeFile(path.join(dir, OUTPUT_FOLDER_NAME, 'IMG_001_1080x1350.jpg'), 'existing');
     const out = await writeOutput(src, Buffer.from('new'), canvas, 'jpg');
     expect(path.basename(out)).toBe('IMG_001_1080x1350-1.jpg');
-    expect(await fs.readFile(path.join(dir, 'IMG_001_1080x1350.jpg'), 'utf8')).toBe('existing');
+    expect(await fs.readFile(path.join(dir, OUTPUT_FOLDER_NAME, 'IMG_001_1080x1350.jpg'), 'utf8')).toBe('existing');
   });
 
   it('leaves no temporary files behind', async () => {
@@ -39,7 +51,7 @@ describe('writeOutput', () => {
     const src = path.join(dir, 'a.jpg');
     await fs.writeFile(src, 'o');
     await writeOutput(src, Buffer.from('n'), canvas, 'jpg');
-    expect((await fs.readdir(dir)).filter((n) => n.endsWith('.tmp'))).toEqual([]);
+    expect((await fs.readdir(path.join(dir, OUTPUT_FOLDER_NAME))).filter((n) => n.endsWith('.tmp'))).toEqual([]);
   });
 
   it('reports a read-only folder as WriteFolderError', async () => {

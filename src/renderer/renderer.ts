@@ -21,6 +21,7 @@ const ui = {
   pickFolder: el<HTMLButtonElement>('pick-folder'),
   folderPath: el('folder-path'),
   recursive: el<HTMLInputElement>('recursive'),
+  outputMode: el<HTMLSelectElement>('output-mode'),
   imageCount: el('image-count'),
   noImages: el('no-images'),
   fileList: el('file-list'),
@@ -150,7 +151,11 @@ function parseSide(text: string): number {
 ui.pickFolder.addEventListener('click', async () => {
   if (await api.pickFolder()) await refreshImages();
 });
-ui.recursive.addEventListener('change', () => void refreshImages());
+ui.recursive.addEventListener('change', () => {
+  // The save mode only matters for subfolders, so it follows the checkbox.
+  ui.outputMode.disabled = !ui.recursive.checked;
+  void refreshImages();
+});
 
 // Folder drag-and-drop: the whole window is a drop target; the main process validates the path.
 window.addEventListener('dragover', (e) => {
@@ -219,7 +224,7 @@ ui.run.addEventListener('click', async () => {
   ui.cancel.hidden = false;
   updateRunButton();
   try {
-    const s = await api.run({ recursive: ui.recursive.checked, format: ui.format.value as 'keep' | 'jpeg' | 'png', quality: Number(ui.quality.value) });
+    const s = await api.run({ recursive: ui.recursive.checked, format: ui.format.value as 'keep' | 'jpeg' | 'png', quality: Number(ui.quality.value), outputMode: ui.outputMode.value as 'each' | 'single' });
     const skipped = s.skipped > 0 ? `, ${s.skipped} not processed` : '';
     ui.summary.textContent = `Done: ${s.succeeded} succeeded, ${s.failed} failed${skipped}`;
   } catch (err) {

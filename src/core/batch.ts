@@ -7,12 +7,22 @@ import { loadImage } from './image-loader';
 import { WriteFolderError, writeOutput } from './output';
 import { smartFit } from './smart-fit';
 
+/** Where results from subfolders go: next to their own folder, or all into one `resized` folder. */
+export type OutputMode = 'each' | 'single';
+
 /** Settings for one batch run. */
 export interface BatchOptions {
   canvas: Size;
   format: OutputFormat;
   /** JPEG/WebP quality 1–100; defaults to 90. */
   quality?: number;
+  /**
+   * `'each'` (default): every folder gets its own `resized` subfolder. `'single'`: all results go
+   * into `<outputRoot>/resized`. Requires `outputRoot` when set to `'single'`.
+   */
+  outputMode?: OutputMode;
+  /** The selected folder; the base of the single `resized` folder in `'single'` mode. */
+  outputRoot?: string;
   /** Maximum files processed at once; defaults to `max(2, floor(cpus / 2))`. */
   concurrency?: number;
   /** Aborting stops new files from starting; files already in progress finish. */
@@ -34,19 +44,24 @@ function describeError(err: unknown): string {
 }
 
 /**
- * Processes a single image: load (EXIF/HEIC) → smart fit → encode → write beside the original.
+ * Processes a single image: load (EXIF/HEIC) → smart fit → encode → write into a `resized` folder.
  * Returns the created file path; throws on any failure.
  *
  * @example
  * const out = await processFile('/photos/a.heic', { canvas: { width: 1080, height: 1350 }, format: 'keep' });
+ * // '/photos/resized/a_1080x1350.jpg'
  */
-export async function processFile(file: string, options: Pick<BatchOptions, 'canvas' | 'format' | 'quality'>): Promise<string> {
+export async function processFile(
+  file: string,
+  options: Pick<BatchOptions, 'canvas' | 'format' | 'quality' | 'outputMode' | 'outputRoot'>,
+): Promise<string> {
   const image = await loadImage(file);
   try {
     const pipeline = await smartFit(image, options.canvas);
     const format = resolveFormat(file, options.format);
     const bytes = await encode(pipeline, format, options.quality);
-    return await writeOutput(file, bytes, options.canvas, format.ext);
+    const baseDir = options.outputMode === 'single' ? options.outputRoot : undefined;
+    return await writeOutput(file, bytes, options.canvas, format.ext, baseDir);
   } finally {
     await image.dispose();
   }
