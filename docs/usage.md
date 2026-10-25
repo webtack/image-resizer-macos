@@ -1,41 +1,43 @@
-# Посібник користувача
+# User guide
 
-## Перший запуск
+## First launch
 
-Збірка без підпису блокується Gatekeeper. Клацніть програму правою кнопкою → **Open** → **Open**
-(докладніше в `docs/release.md`). Далі вона запускається звичайно.
+An unsigned build is blocked by Gatekeeper. Right-click the app → **Open** → **Open** (details in
+[release.md](release.md)). After that it launches normally.
 
-## Покроково
+## Step by step
 
-1. **Оберіть папку.** У блоці **1. Folder** натисніть **Choose folder…** або перетягніть папку на
-   вікно програми. Програма покаже кількість зображень і їх список.
-   - Щоб обробити й підпапки, увімкніть **Include subfolders**. Тоді стане активним
-     **Save subfolder results**: у кожної папки своя `resized` (типово) або одна `resized` в обраній папці.
-   - Якщо підтримуваних зображень немає, з'явиться `No images found`, а Run буде вимкнено.
-2. **Оберіть пресет.** У блоці **2. Size** виберіть розмір зі списку або створіть свій через
-   **Manage presets…** (див. `docs/presets.md`).
-3. **Оберіть формат.** У блоці **3. Output** виберіть **Format** — JPEG (типово), PNG або
-   Keep original — і **Quality** (1–100, типово 90; для PNG не застосовується).
-4. **Запустіть.** Натисніть **Run**. Блок **4. Run** покаже смугу прогресу та статус кожного файлу:
-   `✓` готово, `✗` помилка з причиною, `–` не оброблено. Наприкінці з'явиться підсумок
+1. **Choose a folder.** In block **1. Folder**, click **Choose folder…** or drag a folder onto the app
+   window. The app shows the number of images and their list.
+   - To process subfolders too, turn on **Include subfolders**. This enables
+     **Save subfolder results**: each folder gets its own `resized` (default), or there is a single
+     `resized` in the selected folder.
+   - If there are no supported images, `No images found` appears and Run is disabled.
+2. **Choose a preset.** In block **2. Size**, pick a size from the list or create your own via
+   **Manage presets…** (see [presets.md](presets.md)).
+3. **Choose a format.** In block **3. Output**, pick **Format** — JPEG (default), PNG or
+   Keep original — and **Quality** (1–100, default 90; does not apply to PNG).
+4. **Run.** Click **Run**. Block **4. Run** shows a progress bar and the status of each file:
+   `✓` done, `✗` error with a reason, `–` not processed. At the end a summary appears:
    `Done: N succeeded, M failed`.
-5. **Скасування.** **Cancel** зупиняє запуск нових файлів; уже готові результати залишаються.
+5. **Cancel.** **Cancel** stops starting new files; results that are already done are kept.
 
-Результати лежать у підпапці `resized` поруч з оригіналами: `IMG_001.jpg` →
-`resized/IMG_001_1080x1350.jpg` (правила іменування — у `docs/batch.md`). Програма не сканує папки `resized`, тож повторний запуск не обробляє власні результати. Оригінали не змінюються.
+Results are placed in the `resized` subfolder next to the originals: `IMG_001.jpg` →
+`resized/IMG_001_1080x1350.jpg` (naming rules are in [batch.md](batch.md)). The app does not scan
+`resized` folders, so a repeated run does not process its own results. Originals are not modified.
 
-Кнопка **Run** активна, лише коли обрано папку з принаймні одним зображенням і пресет.
+The **Run** button is active only when a folder with at least one image and a preset are selected.
 
-## Типові помилки
+## Common errors
 
-| Повідомлення | Причина й що робити |
+| Message | Cause and what to do |
 | --- | --- |
-| `No images found` | У папці немає `.jpg/.jpeg/.png/.heic/.heif/.tif/.tiff/.webp`; оберіть іншу папку або увімкніть Include subfolders |
-| `Cannot write to folder` | Немає прав на запис (папка лише для читання); оберіть папку, куди можна писати |
-| `Input file contains unsupported image format` | Файл пошкоджений або це не зображення; решта файлів обробляється далі |
-| `Cannot convert HEIC image` | `sips` не зміг прочитати HEIC; перевірте файл |
+| `No images found` | The folder has no `.jpg/.jpeg/.png/.heic/.heif/.tif/.tiff/.webp`; choose another folder or turn on Include subfolders |
+| `Cannot write to folder` | No write permission (read-only folder); choose a folder you can write to |
+| `Input file contains unsupported image format` | The file is damaged or not an image; the other files continue to be processed |
+| `Cannot convert HEIC image` | `sips` could not read the HEIC; check the file |
 
-## Приватність
+## Privacy
 
-Програма працює офлайн: не робить мережевих запитів і не збирає даних. Читання й запис відбуваються
-лише всередині обраної (або скинутої на вікно) папки.
+The app works offline: it makes no network requests and collects no data. Reading and writing happen
+only inside the selected (or dropped) folder.

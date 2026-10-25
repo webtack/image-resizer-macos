@@ -1,74 +1,74 @@
-# Випуск (збірка й поширення)
+# Release (build and distribution)
 
-Збірка не підписана й не нотаризована (немає Apple Developer акаунта, Mac App Store не
-використовується). Артефакти — `.dmg` і `.zip` для Apple Silicon (arm64) та Intel (x64).
+The build is neither signed nor notarized (there is no Apple Developer account, and the Mac App Store
+is not used). The artifacts are `.dmg` and `.zip` files for Apple Silicon (arm64) and Intel (x64).
 
-## 1. Піднімання версії
+## 1. Bump the version
 
 ```bash
-npm version patch   # або minor / major; змінює "version" у package.json
+npm version patch   # or minor / major; changes "version" in package.json
 ```
 
-Версія потрапляє в назви файлів: `Image Resizer-<версія>-arm64.dmg` тощо.
+The version ends up in file names: `Image Resizer-<version>-arm64.dmg` and so on.
 
-## 2. Підготовка залежностей (один раз)
+## 2. Prepare dependencies (once)
 
-`sharp` має окремі нативні бінарники для кожної архітектури. Щоб зібрати x64-версію на Apple Silicon
-(і навпаки), встановіть бінарники обох платформ:
+`sharp` has separate native binaries for each architecture. To build the x64 version on Apple Silicon
+(and vice versa), install the binaries for both platforms:
 
 ```bash
 npm install --os=darwin --cpu=x64 sharp --legacy-peer-deps
 npm install --os=darwin --cpu=arm64 sharp --legacy-peer-deps
 ```
 
-Прапорець `--legacy-peer-deps` потрібен, бо в цьому середовищі `npm` без нього інколи падає з
-помилкою `Cannot read properties of null (reading 'edgesOut')`.
+The `--legacy-peer-deps` flag is needed because in this environment `npm` sometimes fails without it
+with `Cannot read properties of null (reading 'edgesOut')`.
 
-## 3. Збірка
+## 3. Build
 
 ```bash
-npm test          # переконайтеся, що всі тести проходять
+npm test          # make sure all tests pass
 npm run dist      # tsc + electron-builder
 ```
 
-Результат — у папці `release/` (вона в `.gitignore`):
+The output is in the `release/` folder (it is in `.gitignore`):
 
-| Файл | Архітектура |
+| File | Architecture |
 | --- | --- |
-| `Image Resizer-<версія>-arm64.dmg`, `Image Resizer-<версія>-arm64-mac.zip` | Apple Silicon |
-| `Image Resizer-<версія>.dmg`, `Image Resizer-<версія>-mac.zip` | Intel |
+| `Image Resizer-<version>-arm64.dmg`, `Image Resizer-<version>-arm64-mac.zip` | Apple Silicon |
+| `Image Resizer-<version>.dmg`, `Image Resizer-<version>-mac.zip` | Intel |
 
-Налаштування збірки — у полі `build` у `package.json`: `mac.identity: null` (без підпису), `sharp` і
-`@img/*` у `asarUnpack` (нативні модулі не можна читати з `app.asar`), іконка `build/icon.icns`.
-Іконку можна перегенерувати командою `node scripts/make-icon.mjs`.
+Build settings live in the `build` field of `package.json`: `mac.identity: null` (no signing), `sharp`
+and `@img/*` in `asarUnpack` (native modules cannot be read from `app.asar`), icon `build/icon.icns`.
+The icon can be regenerated with `node scripts/make-icon.mjs`.
 
-## 4. Перевірка зібраної програми
+## 4. Verify the built app
 
-1. Переконайтеся, що `sharp` розпакований: `release/mac-arm64/Image Resizer.app/Contents/Resources/app.asar.unpacked/node_modules/@img/` містить `sharp-darwin-arm64` і `sharp-libvips-darwin-arm64`.
-2. Запустіть пакет як звичайний `.app` і перегляньте вікно:
+1. Make sure `sharp` is unpacked: `release/mac-arm64/Image Resizer.app/Contents/Resources/app.asar.unpacked/node_modules/@img/` must contain `sharp-darwin-arm64` and `sharp-libvips-darwin-arm64`.
+2. Launch the package as a regular `.app` and look at the window:
 
    ```bash
    open -n "release/mac-arm64/Image Resizer.app"
    ```
 
-3. Обробіть папку-фікстуру з HEIC: оберіть її в програмі й натисніть Run. Мають з'явитися файли
-   `<name>_<W>x<H>.jpg`, зокрема для `.heic`.
+3. Process a fixture folder with HEIC files: select it in the app and click Run. `<name>_<W>x<H>.jpg`
+   files should appear, including ones for `.heic`.
 
-## 5. Перший запуск на іншому Mac (Gatekeeper)
+## 5. First launch on another Mac (Gatekeeper)
 
-Завантажений файл без підпису macOS блокує. Користувач має:
+macOS blocks a downloaded unsigned app. The user has to:
 
-1. Відкрити `.dmg` й перетягнути **Image Resizer** у `Applications` (для `.zip` — розпакувати).
-2. Клацнути програму **правою кнопкою → Open → Open** (достатньо один раз).
+1. Open the `.dmg` and drag **Image Resizer** into `Applications` (for a `.zip`, unzip it).
+2. Right-click the app → **Open** → **Open** (once is enough).
 
-Якщо macOS усе одно відмовляє, зняти карантинний атрибут:
+If macOS still refuses, remove the quarantine attribute:
 
 ```bash
 xattr -cr "/Applications/Image Resizer.app"
 ```
 
-## 6. Поширення
+## 6. Distribution
 
-Передайте `.dmg` (або `.zip`) потрібної архітектури — через GitHub Releases, хмарне сховище чи
-месенджер — разом із нагадуванням про крок 5. Визначити архітектуру Mac: меню  → **Про цей Mac**
-(Apple M… = arm64, Intel = x64).
+Send the `.dmg` (or `.zip`) for the right architecture — via GitHub Releases, cloud storage or a
+messenger — together with a reminder about step 5. To find out a Mac's architecture: Apple menu →
+**About This Mac** (Apple M… = arm64, Intel = x64).

@@ -1,69 +1,70 @@
-# Пакетна обробка
+# Batch processing
 
-## Пошук зображень
+## Image discovery
 
-Після вибору папки програма збирає всі підтримувані файли: `.jpg`, `.jpeg`, `.png`, `.heic`, `.heif`,
-`.tif`, `.tiff`, `.webp` (регістр розширення не має значення). Інші файли ігноруються.
+After a folder is chosen, the app collects all supported files: `.jpg`, `.jpeg`, `.png`, `.heic`,
+`.heif`, `.tif`, `.tiff`, `.webp` (extension case does not matter). Other files are ignored.
 
-- Підпапки скануються лише з увімкненим перемикачем **Include subfolders**.
-- Папки з іменем `resized` (без урахування регістру) ніколи не скануються: це папка результатів
-  програми. Якщо у вас є власна папка `resized` з вихідними фото, їх не буде знайдено.
-- Приховані файли й папки (ім'я починається з крапки) пропускаються.
-- Файли, створені програмою раніше для **обраного пресета** (`<name>_<W>x<H>` або
-  `<name>_<W>x<H>-<n>`), не вважаються вихідними, тож повторний запуск не обробляє власні результати.
-- Якщо зображень немає, показується повідомлення `No images found`, а кнопка Run вимкнена.
+- Subfolders are scanned only when the **Include subfolders** switch is on.
+- Folders named `resized` (case-insensitive) are never scanned: that is the app's output folder. If
+  you have your own `resized` folder with source photos, they will not be found.
+- Hidden files and folders (names starting with a dot) are skipped.
+- Files previously created by the app for the **selected preset** (`<name>_<W>x<H>` or
+  `<name>_<W>x<H>-<n>`) are not treated as sources, so a repeated run does not process its own results.
+- If there are no images, the message `No images found` is shown and the Run button is disabled.
 
-## Іменування результатів
+## Result naming
 
-Результат зберігається у підпапці **`resized`** папки з оригіналом (створюється за потреби) як
-`<name>_<W>x<H>.<ext>`. Оригінали ніколи не змінюються і не видаляються.
+Each result is saved to the **`resized`** subfolder of the original's folder (created if needed) as
+`<name>_<W>x<H>.<ext>`. Originals are never modified or deleted.
 
-Для підпапок (з увімкненим **Include subfolders**) параметр **Save subfolder results** визначає, куди
-потрапляють результати:
+For subfolders (with **Include subfolders** on), the **Save subfolder results** option decides where
+results go:
 
-| Режим | Результат для `folder1/trip/IMG.jpg` (обрано `folder1`) |
+| Mode | Result for `folder1/trip/IMG.jpg` (`folder1` selected) |
 | --- | --- |
-| **Each folder has its own resized** (типово) | `folder1/trip/resized/IMG_<W>x<H>.jpg` |
+| **Each folder has its own resized** (default) | `folder1/trip/resized/IMG_<W>x<H>.jpg` |
 | **One resized in the selected folder** | `folder1/resized/IMG_<W>x<H>.jpg` |
 
-У режимі однієї папки структура підпапок не відтворюється, а файли з однаковими іменами з різних
-підпапок розрізняються лічильником. Для зображень безпосередньо в обраній папці вибір не впливає на
-результат. Параметр доступний лише з увімкненим **Include subfolders**.
+In the single-folder mode the subfolder structure is not reproduced, and files with the same name from
+different subfolders are told apart by a counter. For images directly in the selected folder the choice
+has no effect. The option is available only with **Include subfolders** on.
 
-| Оригінал | Пресет | Формат | Результат |
+| Original | Preset | Format | Result |
 | --- | --- | --- | --- |
 | `IMG_001.jpg` | 1080×1350 | JPEG | `resized/IMG_001_1080x1350.jpg` |
 | `scan.png` | 1920×1080 | Keep original | `resized/scan_1920x1080.png` |
 | `IMG_002.HEIC` | 1080×1080 | Keep original | `resized/IMG_002_1080x1080.jpg` |
 
-Існуючі файли не перезаписуються: якщо `resized/IMG_001_1080x1350.jpg` уже є, новий файл дістане
-лічильник — `resized/IMG_001_1080x1350-1.jpg`, потім `-2` тощо.
+Existing files are not overwritten: if `resized/IMG_001_1080x1350.jpg` already exists, the new file
+gets a counter — `resized/IMG_001_1080x1350-1.jpg`, then `-2`, and so on.
 
-Запис атомарний: дані спершу йдуть у тимчасовий файл у папці `resized` і лише потім з'являються під
-фінальним іменем, тому скасування чи збій не залишають напівзаписаних файлів.
+Writing is atomic: data first goes to a temporary file in the `resized` folder and only then appears
+under its final name, so cancellation or a crash never leaves half-written files.
 
-## Формати й якість
+## Formats and quality
 
-| Вибір | Поведінка |
+| Choice | Behavior |
 | --- | --- |
-| Keep original | JPEG, PNG, WebP і TIFF лишаються у своєму форматі; для решти (наприклад, HEIC) — JPEG |
-| JPEG | завжди `.jpg` |
-| PNG | завжди `.png`, без втрат |
+| Keep original | JPEG, PNG, WebP and TIFF keep their format; everything else (for example, HEIC) becomes JPEG |
+| JPEG | always `.jpg` |
+| PNG | always `.png`, lossless |
 
-Якість JPEG (і WebP/TIFF у режимі Keep original) — від 1 до 100, типово **90**. Для PNG якість не
-застосовується. Прозорі ділянки зображень заповнюються розмитим фоном (див. `docs/smart-fit.md`).
+JPEG quality (and WebP/TIFF in Keep original mode) ranges from 1 to 100, default **90**. Quality does
+not apply to PNG. Transparent areas of images are filled with the blurred background (see
+[smart-fit.md](smart-fit.md)).
 
-## Паралельність
+## Concurrency
 
-Одночасно обробляється `max(2, floor(cpus / 2))` файлів. Потоки `sharp` діляться між воркерами, щоб
-не перевантажувати процесор.
+`max(2, floor(cpus / 2))` files are processed at a time. `sharp` threads are shared between workers so
+the CPU is not overloaded.
 
-## Помилки та скасування
+## Errors and cancellation
 
-- Помилка на одному файлі **не зупиняє** решту. Файл позначається як failed із причиною, а наприкінці
-  показується підсумок «виконано / помилок».
-- Якщо у папку не можна писати (наприклад, лише для читання), кожен файл отримує причину
-  `Cannot write to folder`, програма не падає.
-- Пошкоджений або нечитабельний файл (зокрема зіпсований HEIC) отримує причину від декодера.
-- **Cancel** зупиняє запуск нових файлів: поточні файли дообробляються, готові результати
-  залишаються, решта позначається як skipped (не оброблено).
+- An error on one file does **not** stop the rest. The file is marked as failed with a reason, and at
+  the end a "succeeded / failed" summary is shown.
+- If the folder is not writable (for example, read-only), every file gets the reason
+  `Cannot write to folder`, and the app does not crash.
+- A damaged or unreadable file (including a corrupt HEIC) gets the reason reported by the decoder.
+- **Cancel** stops starting new files: files in progress finish, completed results are kept, and the
+  rest are marked as skipped (not processed).

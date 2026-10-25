@@ -14,6 +14,6 @@
 - Identifiers, commit messages and OpenSpec artifacts are in English.
 
 ## Documentation
-- The `docs/` folder is mandatory. Documentation about the app MUST be kept up to date there, written in Ukrainian.
+- The `docs/` folder is mandatory. Documentation about the app MUST be kept up to date there, written in English.
 - Any change to behavior, UI, presets, build or release steps MUST update the matching file in `docs/` in the same change.
 - Code identifiers, commands and file names inside the docs stay in their original form.

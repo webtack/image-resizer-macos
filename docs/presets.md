@@ -1,58 +1,58 @@
-# Пресети розмірів
+# Size presets
 
-Пресет — це назва та розмір полотна (ширина × висота в пікселях). Для запуску має бути обраний
-рівно один пресет.
+A preset is a name plus a canvas size (width × height in pixels). Exactly one preset must be selected
+to run.
 
-## Стартові пресети
+## Starter presets
 
-Під час першого запуску створюються чотири пресети (перший обрано):
+Four presets are created on first launch (the first one is selected):
 
-| Назва | Розмір |
+| Name | Size |
 | --- | --- |
 | Square | 1080×1080 |
 | Portrait 4:5 | 1080×1350 |
 | Full HD 16:9 | 1920×1080 |
 | HD 16:9 | 1280×720 |
 
-Їх можна редагувати й видаляти.
+They can be edited and deleted.
 
-## Вибір пресета
+## Selecting a preset
 
-У блоці **2. Size** оберіть пресет зі списку. Вибір запам'ятовується між запусками програми.
+In block **2. Size**, pick a preset from the list. The choice is remembered between launches.
 
-## Створення
+## Creating
 
-1. Натисніть **Manage presets…**.
-2. У формі **New preset** введіть **Name**, **Width** і **Height**.
-3. Натисніть **Add**. Пресет з'явиться у списку й у полі вибору.
+1. Click **Manage presets…**.
+2. In the **New preset** form, enter **Name**, **Width** and **Height**.
+3. Click **Add**. The preset appears in the list and in the selector.
 
-## Редагування
+## Editing
 
-1. У вікні **Manage presets** натисніть **Edit** біля потрібного пресета.
-2. Змініть поля (форма матиме заголовок **Edit preset**) і натисніть **Save**.
-3. **Cancel edit** повертає форму в режим створення без змін.
+1. In the **Manage presets** window, click **Edit** next to the preset.
+2. Change the fields (the form is titled **Edit preset**) and click **Save**.
+3. **Cancel edit** returns the form to create mode without changes.
 
-## Видалення
+## Deleting
 
-Натисніть **Delete** біля пресета. Якщо видалено обраний пресет, автоматично обирається перший із
-решти. Якщо список порожній, пресет не обрано, а кнопка Run вимкнена.
+Click **Delete** next to the preset. If the selected preset is deleted, the first remaining one is
+selected automatically. If the list is empty, no preset is selected and the Run button is disabled.
 
-## Правила й повідомлення про помилки
+## Rules and error messages
 
-- **Name** не може бути порожнім і має бути унікальним (регістр не враховується):
+- **Name** cannot be empty and must be unique (case-insensitive):
   `A preset with this name already exists`.
-- **Width** і **Height** — цілі числа від 1 до 16384:
-  `Width must be a whole number from 1 to 16384` (так само для `Height`). Нуль, дробові числа й текст
-  не приймаються.
-- Повідомлення показуються під відповідними полями, і пресет не зберігається, доки їх не виправлено.
+- **Width** and **Height** are whole numbers from 1 to 16384:
+  `Width must be a whole number from 1 to 16384` (likewise for `Height`). Zero, fractions and text are
+  not accepted.
+- Messages are shown under the corresponding fields, and the preset is not saved until they are fixed.
 
-## Де зберігаються
+## Where they are stored
 
-У файлі `presets.json` у папці даних програми:
+In the `presets.json` file in the app's data folder:
 
 ```
 ~/Library/Application Support/Image Resizer/presets.json
 ```
 
-Там зберігаються список пресетів і ідентифікатор обраного. Якщо файл пошкоджено або видалено,
-програма відновлює чотири стартові пресети.
+It holds the list of presets and the id of the selected one. If the file is damaged or deleted, the app
+restores the four starter presets.

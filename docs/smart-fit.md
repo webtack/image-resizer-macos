@@ -1,37 +1,37 @@
-# Розумне вписування (Smart fit)
+# Smart fit
 
-Програма завжди створює полотно **точно** заданого розміру (наприклад, 1080×1350). Фото при цьому
-ніколи не обрізається.
+The app always produces a canvas of **exactly** the requested size (for example, 1080×1350). The
+photo itself is never cropped.
 
-## Як це працює
+## How it works
 
-1. **Орієнтація.** Мітку EXIF-орієнтації застосовано, тому повернуте фото на виході стоїть рівно.
-   HEIC/HEIF спершу конвертується в тимчасовий JPEG через вбудований у macOS `sips`.
-2. **Вписування за більшою стороною.** Фото масштабується зі збереженням пропорцій так, щоб воно
-   цілком вмістилося в полотно: масштаб = `min(W / ширина, H / висота)`. Малі фото збільшуються
-   (інтерполяція Lanczos3). Фото центрується.
-3. **Розмитий фон.** Якщо після вписування лишаються поля (більше 1 px), їх заповнює те саме фото,
-   масштабоване так, щоб покрити все полотно (`cover`, з обрізанням), і розмите.
-4. **Збирання.** Різке фото накладається по центру розмитого фону. Результат — непрозорий sRGB.
-   Прозорі ділянки PNG підкладаються під розмитий фон, а не під чорний колір.
+1. **Orientation.** The EXIF orientation tag is applied, so a rotated photo comes out upright.
+   HEIC/HEIF is first converted to a temporary JPEG using the `sips` tool built into macOS.
+2. **Fit by the longer side.** The photo is scaled, keeping its proportions, so that it fits entirely
+   inside the canvas: scale = `min(W / width, H / height)`. Small photos are enlarged (Lanczos3
+   interpolation). The photo is centered.
+3. **Blurred background.** If margins remain after fitting (more than 1 px), they are filled with the
+   same photo scaled to cover the whole canvas (`cover`, with cropping) and blurred.
+4. **Compositing.** The sharp photo is placed in the center of the blurred background. The result is
+   opaque sRGB. Transparent areas of a PNG are placed over the blurred background, not over black.
 
-Якщо пропорції фото збігаються з полотном, фон не потрібен, і фото просто масштабується.
+If the photo's proportions match the canvas, no background is needed and the photo is simply scaled.
 
-## Радіус розмиття
+## Blur radius
 
-Сигма розмиття дорівнює **4 %** більшої сторони полотна (константа `BLUR_SIGMA_RATIO = 0.04` у
-`src/core/smart-fit.ts`). Розмиття виконується на зменшеній у 4 рази копії з віддзеркаленими краями
-(щоб краї не темнішали), потім результат збільшується назад. Значення підібране візуально:
-фон читається як «атмосферний» колір, а не як дублікат фото.
+The blur sigma is **4 %** of the canvas's longer side (the constant `BLUR_SIGMA_RATIO = 0.04` in
+`src/core/smart-fit.ts`). Blurring is done on a copy downscaled 4× with mirrored edges (so the edges
+do not darken), and the result is scaled back up. The value was tuned visually: the background reads as
+an "ambient" color rather than a duplicate of the photo.
 
-## Приклади
+## Examples
 
-| Вихідне фото | Полотно | Результат |
+| Source photo | Canvas | Result |
 | --- | --- | --- |
-| 4000×3000 | 1080×1350 | фото 1080×810 по центру, зверху й знизу по 270 px розмитого фону |
-| 2000×2500 | 1080×1350 | фото заповнює все полотно, фону немає |
-| 400×300 | 1080×1350 | фото збільшено до 1080×810, поля — розмитий фон |
-| 6000×1000 | 1080×1080 | фото 1080×180 по центру, решта — розмитий фон |
-| 3000×4000 | 1920×1080 | фото 810×1080 по центру, збоку по 555 px розмитого фону |
+| 4000×3000 | 1080×1350 | 1080×810 photo centered, 270 px of blurred background above and below |
+| 2000×2500 | 1080×1350 | photo fills the whole canvas, no background |
+| 400×300 | 1080×1350 | photo enlarged to 1080×810, margins are blurred background |
+| 6000×1000 | 1080×1080 | 1080×180 photo centered, the rest is blurred background |
+| 3000×4000 | 1920×1080 | 810×1080 photo centered, 555 px of blurred background on each side |
 
-Ці розміри перевіряють модульні тести `src/core/fit.test.ts` та `src/core/smart-fit.test.ts`.
+These sizes are verified by the unit tests `src/core/fit.test.ts` and `src/core/smart-fit.test.ts`.

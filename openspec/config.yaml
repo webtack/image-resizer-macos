@@ -5,7 +5,7 @@ schema: spec-driven
 context: |
   Tech stack: Electron, TypeScript, sharp, Vitest; macOS 13+; unsigned .dmg/.zip via electron-builder (no App Store)
   Code rules: all code is commented in English (TSDoc) with usage examples in doc comments
-  Docs rules: the docs/ folder is mandatory and is kept up to date in Ukrainian
+  Docs rules: the docs/ folder is mandatory and is kept up to date in English
 
 # Per-artifact rules (optional)
 # Add custom rules for specific artifacts.
