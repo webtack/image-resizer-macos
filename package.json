@@ -1,7 +1,7 @@
 {
   "name": "image-resizer",
   "productName": "Image Resizer",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Batch image resizer with smart fit and blurred background",
   "main": "dist/main/main.js",
   "private": true,
