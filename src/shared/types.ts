@@ -6,12 +6,19 @@
 /** User-selectable output format. */
 export type OutputFormat = 'keep' | 'jpeg' | 'png';
 
-/** A named target canvas size. */
+/**
+ * A named target size.
+ *
+ * A side set to `null` is left open: it is calculated per image so the original proportions are kept.
+ * At least one side is always set in a valid preset.
+ */
 export interface SizePreset {
   id: string;
   name: string;
-  width: number;
-  height: number;
+  /** Target width in pixels, or `null` to derive it from the height. */
+  width: number | null;
+  /** Target height in pixels, or `null` to derive it from the width. */
+  height: number | null;
 }
 
 /** User-editable fields of a preset (everything except the generated id). */

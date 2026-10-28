@@ -77,12 +77,22 @@ async function refreshImages(): Promise<void> {
   updateRunButton();
 }
 
+/**
+ * Formats a preset size for display; an open side is shown as `auto`.
+ *
+ * @example
+ * formatSize({ width: 1080, height: null }); // '1080×auto'
+ */
+function formatSize(p: { width: number | null; height: number | null }): string {
+  return `${p.width ?? 'auto'}×${p.height ?? 'auto'}`;
+}
+
 /** Applies new preset state to the picker and the manage dialog. */
 function applyPresets(next: PresetState): void {
   state.presets = next;
   ui.presetSelect.replaceChildren(
     ...next.presets.map((p) => {
-      const option = new Option(`${p.name} (${p.width}×${p.height})`, p.id, false, p.id === next.selectedId);
+      const option = new Option(`${p.name} (${formatSize(p)})`, p.id, false, p.id === next.selectedId);
       return option;
     }),
   );
@@ -96,7 +106,7 @@ function renderPresetList(): void {
   ui.presetList.replaceChildren(
     ...state.presets.presets.map((p) => {
       const li = document.createElement('li');
-      const name = Object.assign(document.createElement('span'), { className: 'name', textContent: `${p.name} — ${p.width}×${p.height}` });
+      const name = Object.assign(document.createElement('span'), { className: 'name', textContent: `${p.name} — ${formatSize(p)}` });
       const edit = Object.assign(document.createElement('button'), { type: 'button', textContent: 'Edit' });
       edit.addEventListener('click', () => startEdit(p));
       const del = Object.assign(document.createElement('button'), { type: 'button', textContent: 'Delete' });
@@ -132,8 +142,9 @@ function resetForm(): void {
 function startEdit(p: SizePreset): void {
   state.editingId = p.id;
   ui.name.value = p.name;
-  ui.width.value = String(p.width);
-  ui.height.value = String(p.height);
+  // An open side leaves its field empty.
+  ui.width.value = p.width === null ? '' : String(p.width);
+  ui.height.value = p.height === null ? '' : String(p.height);
   ui.formTitle.textContent = 'Edit preset';
   ui.save.textContent = 'Save';
   ui.resetEdit.hidden = false;
@@ -141,10 +152,12 @@ function startEdit(p: SizePreset): void {
 }
 
 /**
- * Parses a size field. Anything that is not a plain integer becomes NaN so the core validator
- * rejects it with its normal message (spec: "non-number" is invalid).
+ * Parses a size field. An empty field is `null` (the side is calculated proportionally). Anything
+ * else that is not a plain integer becomes NaN so the core validator rejects it with its normal
+ * message (spec: "non-number" is invalid).
  */
-function parseSide(text: string): number {
+function parseSide(text: string): number | null {
+  if (text.trim() === '') return null;
   return /^\s*\d+\s*$/.test(text) ? Number(text) : NaN;
 }
 

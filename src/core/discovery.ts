@@ -1,6 +1,6 @@
 import { promises as fs } from 'node:fs';
 import * as path from 'node:path';
-import type { Size } from './fit';
+import type { TargetSize } from './fit';
 import { OUTPUT_FOLDER_NAME } from './output';
 
 /** File extensions (lowercase, with dot) the app accepts as source images. */
@@ -12,20 +12,25 @@ export const SUPPORTED_EXTENSIONS: ReadonlySet<string> = new Set([
 export interface DiscoveryOptions {
   /** Scan subfolders too. Defaults to false. */
   recursive?: boolean;
-  /** When set, files named like this preset's outputs (`<name>_<W>x<H>[-n]`) are skipped. */
-  preset?: Size;
+  /**
+   * When set, files named like this preset's outputs (`<name>_<W>x<H>[-n]`) are skipped. A `null`
+   * side matches any number, because one-sided presets produce a different size per image.
+   */
+  preset?: TargetSize;
 }
 
 /**
  * Tells whether a file name looks like an output previously produced for `preset`,
  * i.e. its stem ends with `_<W>x<H>` optionally followed by a collision counter `-<n>`.
+ * For a one-sided preset the open side matches any digits.
  *
  * @example
  * isPreviousOutput('photo_1080x1350.jpg', { width: 1080, height: 1350 }); // true
+ * isPreviousOutput('photo_1000x750.jpg', { width: 1000, height: null }); // true
  */
-export function isPreviousOutput(fileName: string, preset: Size): boolean {
+export function isPreviousOutput(fileName: string, preset: TargetSize): boolean {
   const stem = path.parse(fileName).name;
-  return new RegExp(`_${preset.width}x${preset.height}(-\\d+)?$`).test(stem);
+  return new RegExp(`_${preset.width ?? '\\d+'}x${preset.height ?? '\\d+'}(-\\d+)?$`).test(stem);
 }
 
 /**

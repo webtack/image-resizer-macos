@@ -14,7 +14,9 @@ An unsigned build is blocked by Gatekeeper. Right-click the app → **Open** →
      `resized` in the selected folder.
    - If there are no supported images, `No images found` appears and Run is disabled.
 2. **Choose a preset.** In block **2. Size**, pick a size from the list or create your own via
-   **Manage presets…** (see [presets.md](presets.md)).
+   **Manage presets…** (see [presets.md](presets.md)). To make every photo a given width or height
+   while keeping its proportions, create a preset with only **Width** or only **Height** filled in; it
+   is shown as `1080×auto` or `auto×1350`.
 3. **Choose a format.** In block **3. Output**, pick **Format** — JPEG (default), PNG or
    Keep original — and **Quality** (1–100, default 90; does not apply to PNG).
 4. **Run.** Click **Run**. Block **4. Run** shows a progress bar and the status of each file:

@@ -11,12 +11,17 @@ After a folder is chosen, the app collects all supported files: `.jpg`, `.jpeg`,
 - Hidden files and folders (names starting with a dot) are skipped.
 - Files previously created by the app for the **selected preset** (`<name>_<W>x<H>` or
   `<name>_<W>x<H>-<n>`) are not treated as sources, so a repeated run does not process its own results.
+  For a width-only preset the height part matches any number (`<name>_<W>x<digits>`), and for a
+  height-only preset the width part does (`<name>_<digits>x<H>`). A source photo that happens to be
+  named like that (for example, `trip_1000x500.jpg` with width 1000) is skipped too.
 - If there are no images, the message `No images found` is shown and the Run button is disabled.
 
 ## Result naming
 
 Each result is saved to the **`resized`** subfolder of the original's folder (created if needed) as
-`<name>_<W>x<H>.<ext>`. Originals are never modified or deleted.
+`<name>_<W>x<H>.<ext>`. `<W>x<H>` is the **actual** size of that result: for a two-sided preset it is the
+preset size, for a one-sided preset it can differ from photo to photo. Originals are never modified or
+deleted.
 
 For subfolders (with **Include subfolders** on), the **Save subfolder results** option decides where
 results go:
@@ -35,6 +40,8 @@ has no effect. The option is available only with **Include subfolders** on.
 | `IMG_001.jpg` | 1080×1350 | JPEG | `resized/IMG_001_1080x1350.jpg` |
 | `scan.png` | 1920×1080 | Keep original | `resized/scan_1920x1080.png` |
 | `IMG_002.HEIC` | 1080×1080 | Keep original | `resized/IMG_002_1080x1080.jpg` |
+| `a.jpg` (4000×3000) | width 1000 | JPEG | `resized/a_1000x750.jpg` |
+| `b.jpg` (3000×4000) | width 1000 | JPEG | `resized/b_1000x1333.jpg` |
 
 Existing files are not overwritten: if `resized/IMG_001_1080x1350.jpg` already exists, the new file
 gets a counter — `resized/IMG_001_1080x1350-1.jpg`, then `-2`, and so on.

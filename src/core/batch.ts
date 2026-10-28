@@ -1,7 +1,7 @@
 import * as os from 'node:os';
 import sharp from 'sharp';
 import { encode, resolveFormat, type OutputFormat } from './encoder';
-import type { Size } from './fit';
+import { resolveCanvas, type TargetSize } from './fit';
 import type { BatchSummary, FileResult } from '../shared/types';
 import { loadImage } from './image-loader';
 import { WriteFolderError, writeOutput } from './output';
@@ -12,7 +12,8 @@ export type OutputMode = 'each' | 'single';
 
 /** Settings for one batch run. */
 export interface BatchOptions {
-  canvas: Size;
+  /** Requested size; a `null` side is calculated per image to keep its proportions. */
+  target: TargetSize;
   format: OutputFormat;
   /** JPEG/WebP quality 1–100; defaults to 90. */
   quality?: number;
@@ -44,24 +45,31 @@ function describeError(err: unknown): string {
 }
 
 /**
- * Processes a single image: load (EXIF/HEIC) → smart fit → encode → write into a `resized` folder.
+ * Processes a single image: load (EXIF/HEIC) → resolve canvas → smart fit → encode → write into a `resized` folder.
  * Returns the created file path; throws on any failure.
  *
  * @example
- * const out = await processFile('/photos/a.heic', { canvas: { width: 1080, height: 1350 }, format: 'keep' });
+ * const out = await processFile('/photos/a.heic', { target: { width: 1080, height: 1350 }, format: 'keep' });
  * // '/photos/resized/a_1080x1350.jpg'
+ *
+ * @example
+ * // Width only: a 4000×3000 photo becomes 1000×750.
+ * await processFile('/photos/a.jpg', { target: { width: 1000, height: null }, format: 'keep' });
+ * // '/photos/resized/a_1000x750.jpg'
  */
 export async function processFile(
   file: string,
-  options: Pick<BatchOptions, 'canvas' | 'format' | 'quality' | 'outputMode' | 'outputRoot'>,
+  options: Pick<BatchOptions, 'target' | 'format' | 'quality' | 'outputMode' | 'outputRoot'>,
 ): Promise<string> {
   const image = await loadImage(file);
   try {
-    const pipeline = await smartFit(image, options.canvas);
+    // The canvas can differ per image for one-sided presets, so it is resolved here, not per run.
+    const { canvas } = resolveCanvas(image.size, options.target);
+    const pipeline = await smartFit(image, canvas);
     const format = resolveFormat(file, options.format);
     const bytes = await encode(pipeline, format, options.quality);
     const baseDir = options.outputMode === 'single' ? options.outputRoot : undefined;
-    return await writeOutput(file, bytes, options.canvas, format.ext, baseDir);
+    return await writeOutput(file, bytes, canvas, format.ext, baseDir);
   } finally {
     await image.dispose();
   }
@@ -74,7 +82,7 @@ export async function processFile(
  * @example
  * const controller = new AbortController();
  * const summary = await runBatch(files, {
- *   canvas: { width: 1080, height: 1350 },
+ *   target: { width: 1080, height: 1350 },
  *   format: 'jpeg',
  *   quality: 90,
  *   signal: controller.signal,

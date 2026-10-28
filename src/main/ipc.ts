@@ -82,7 +82,7 @@ export function registerIpc(getWindow: () => BrowserWindow | null, store: Preset
       return await runBatch(
         files.sort(),
         {
-          canvas: { width: preset.width, height: preset.height },
+          target: { width: preset.width, height: preset.height },
           format: options.format,
           quality: options.quality,
           outputMode: options.outputMode === 'single' ? 'single' : 'each',

@@ -1,3 +1,5 @@
+import { MAX_SIDE, MIN_SIDE } from './presets';
+
 /** Width and height in pixels. */
 export interface Size {
   width: number;
@@ -51,4 +53,36 @@ export function calculateFit(source: Size, canvas: Size): FitGeometry {
     },
     hasMargins,
   };
+}
+
+/** Requested size where a `null` side is calculated from the source proportions. */
+export interface TargetSize {
+  width: number | null;
+  height: number | null;
+}
+
+/**
+ * Resolves the output canvas for one image.
+ *
+ * With both sides given the target is returned unchanged (`proportional: false`). With one side
+ * given, the other is `round(sourceOther × given / sourceGiven)` clamped to the allowed range, so
+ * the photo keeps its proportions (`proportional: true`). Throws when both sides are `null`;
+ * validation rejects such presets before they get here.
+ *
+ * @example
+ * resolveCanvas({ width: 4000, height: 3000 }, { width: 1080, height: null });
+ * // { canvas: { width: 1080, height: 810 }, proportional: true }
+ */
+export function resolveCanvas(source: Size, target: TargetSize): { canvas: Size; proportional: boolean } {
+  const clamp = (value: number): number => Math.min(MAX_SIDE, Math.max(MIN_SIDE, Math.round(value)));
+  if (target.width !== null && target.height !== null) {
+    return { canvas: { width: target.width, height: target.height }, proportional: false };
+  }
+  if (target.width !== null) {
+    return { canvas: { width: target.width, height: clamp((source.height * target.width) / source.width) }, proportional: true };
+  }
+  if (target.height !== null) {
+    return { canvas: { width: clamp((source.width * target.height) / source.height), height: target.height }, proportional: true };
+  }
+  throw new Error('A target needs a width, a height, or both');
 }

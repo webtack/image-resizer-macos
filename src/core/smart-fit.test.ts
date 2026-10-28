@@ -1,6 +1,7 @@
 import * as path from 'node:path';
 import sharp from 'sharp';
 import { describe, expect, it } from 'vitest';
+import { resolveCanvas } from './fit';
 import { loadImage } from './image-loader';
 import { smartFit } from './smart-fit';
 import { makeTempDir, writeGradient } from './test-fixtures';
@@ -87,5 +88,22 @@ describe('smartFit', () => {
     await img.dispose();
     const meta = await sharp(out).metadata();
     expect([meta.width, meta.height]).toEqual([100, 200]);
+  });
+
+  it('gives a one-sided result the computed size with no background, transparent PNG over white', async () => {
+    const dir = await makeTempDir();
+    const file = path.join(dir, 't.png');
+    await writeGradient(file, 400, 300, { alpha: true });
+    const img = await loadImage(file);
+    const { canvas } = resolveCanvas(img.size, { width: 200, height: null });
+    const out = await (await smartFit(img, canvas)).jpeg().toBuffer();
+    await img.dispose();
+    const meta = await sharp(out).metadata();
+    expect([meta.width, meta.height]).toEqual([200, 150]);
+    expect(meta.hasAlpha).toBe(false);
+    // Fully transparent source: every pixel, including the corners, is white rather than black.
+    for (const [x, y] of [[0, 0], [199, 149], [100, 75]]) {
+      expect((await pixel(out, x, y)).every((v) => v > 240)).toBe(true);
+    }
   });
 });

@@ -36,6 +36,11 @@ function isValidSide(value: unknown): value is number {
  * @example
  * validatePreset({ name: 'Story', width: 0, height: 1920 }, existing);
  * // { width: 'Width must be a whole number from 1 to 16384' }
+ *
+ * @example
+ * validatePreset({ name: 'Web', width: 1200, height: null }, existing); // {} (height is calculated)
+ * validatePreset({ name: 'Web', width: null, height: null }, existing);
+ * // { width: 'Enter a width, a height, or both' }
  */
 export function validatePreset(input: PresetInput, existing: SizePreset[], ignoreId?: string): PresetErrors {
   const errors: PresetErrors = {};
@@ -45,8 +50,13 @@ export function validatePreset(input: PresetInput, existing: SizePreset[], ignor
   } else if (existing.some((p) => p.id !== ignoreId && p.name.toLowerCase() === name.toLowerCase())) {
     errors.name = 'A preset with this name already exists';
   }
-  if (!isValidSide(input.width)) errors.width = `Width must be a whole number from ${MIN_SIDE} to ${MAX_SIDE}`;
-  if (!isValidSide(input.height)) errors.height = `Height must be a whole number from ${MIN_SIDE} to ${MAX_SIDE}`;
+  if (input.width === null && input.height === null) {
+    errors.width = 'Enter a width, a height, or both';
+  } else {
+    // A null side is allowed here: it means "calculate proportionally".
+    if (input.width !== null && !isValidSide(input.width)) errors.width = `Width must be a whole number from ${MIN_SIDE} to ${MAX_SIDE}`;
+    if (input.height !== null && !isValidSide(input.height)) errors.height = `Height must be a whole number from ${MIN_SIDE} to ${MAX_SIDE}`;
+  }
   return errors;
 }
 
@@ -98,9 +108,17 @@ export class PresetStore {
   private static parse(raw: unknown): PresetFile | null {
     const obj = raw as Partial<PresetFile> | null;
     if (!obj || !Array.isArray(obj.presets)) return null;
+    // A side is either a valid number or null (open); at least one side must be set.
+    // Files from earlier versions have numbers on both sides and pass unchanged.
+    const isSideOrNull = (v: unknown): v is number | null => v === null || isValidSide(v);
     const presets = obj.presets.filter(
       (p): p is SizePreset =>
-        !!p && typeof p.id === 'string' && typeof p.name === 'string' && isValidSide(p.width) && isValidSide(p.height),
+        !!p &&
+        typeof p.id === 'string' &&
+        typeof p.name === 'string' &&
+        isSideOrNull(p.width) &&
+        isSideOrNull(p.height) &&
+        (p.width !== null || p.height !== null),
     );
     const selectedId = presets.some((p) => p.id === obj.selectedId) ? (obj.selectedId as string) : (presets[0]?.id ?? null);
     return { presets, selectedId };
