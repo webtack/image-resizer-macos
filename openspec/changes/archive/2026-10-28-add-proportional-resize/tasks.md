@@ -18,10 +18,10 @@
 ## 3. App wiring and UI
 
 - [x] 3.1 Pass `target: { width: preset.width, height: preset.height }` in `src/main/ipc.ts` and adapt `discoverImages` calls; verify `npm run build` succeeds
-- [ ] 3.2 Update `src/renderer/renderer.ts` and `index.html`: empty field parses to `null`, `1080×auto` / `auto×1350` labels in the selector and manage list, the "Leave one side empty to scale proportionally." hint, editing a one-sided preset fills only its set field; verify by running `npm start` and creating, editing, selecting and deleting a width-only and a height-only preset
+- [x] 3.2 Update `src/renderer/renderer.ts` and `index.html`: empty field parses to `null`, `1080×auto` / `auto×1350` labels in the selector and manage list, the "Leave one side empty to scale proportionally." hint, editing a one-sided preset fills only its set field; verify by running `npm start` and creating, editing, selecting and deleting a width-only and a height-only preset
 - [x] 3.3 Update `docs/usage.md` and `docs/presets.md` with the UI steps and labels; verify each documented control name exists in `index.html`
 
 ## 4. Integration check
 
 - [x] 4.1 Run `npm test` and confirm all suites pass
-- [ ] 4.2 Run the app on a folder with a landscape and a portrait photo using a width-only preset and then a height-only preset; verify output sizes and names match `docs/batch.md` and that a repeated run does not re-process its own results
+- [x] 4.2 Run the app on a folder with a landscape and a portrait photo using a width-only preset and then a height-only preset; verify output sizes and names match `docs/batch.md` and that a repeated run does not re-process its own results
