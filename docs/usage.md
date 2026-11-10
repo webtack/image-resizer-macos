@@ -5,6 +5,8 @@
 An unsigned build is blocked by Gatekeeper. Right-click the app → **Open** → **Open** (details in
 [release.md](release.md)). After that it launches normally.
 
+![Image Resizer window with the four blocks: Folder, Size, Output and Run](images/app-window.png)
+
 ## Step by step
 
 1. **Choose a folder.** In block **1. Folder**, click **Choose folder…** or drag a folder onto the app

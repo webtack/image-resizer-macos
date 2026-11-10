@@ -6,6 +6,17 @@ With a two-sided preset the app produces a canvas of **exactly** the requested s
 
 ## How it works
 
+| Before (3:2, landscape) | After (1080×1350) |
+| --- | --- |
+| ![Original landscape photo of a mountain lake](images/before.jpg) | ![The same photo on a 1080×1350 canvas with blurred margins above and below](images/after.jpg) |
+
+The opposite direction: a portrait photo on a landscape canvas gets blurred margins on the left and
+right.
+
+| Before (3:4, portrait) | After (1920×1080, shown at 1200 px) |
+| --- | --- |
+| ![Original portrait photo of a waterfall framed by a tree branch](images/before-portrait.jpg) | ![The same photo on a 1920×1080 canvas with blurred margins on the left and right](images/after-landscape.jpg) |
+
 1. **Orientation.** The EXIF orientation tag is applied, so a rotated photo comes out upright.
    HEIC/HEIF is first converted to a temporary JPEG using the `sips` tool built into macOS.
 2. **Fit by the longer side.** The photo is scaled, keeping its proportions, so that it fits entirely
